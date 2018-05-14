@@ -1,6 +1,6 @@
 package lcs
 
-func LCS(X string, Y string) [][]byte {
+func LCS(X []string, Y []string) [][]byte {
 	m := len(X)
 	n := len(Y)
 
@@ -34,24 +34,53 @@ func max(a byte, b byte) byte {
 	return b
 }
 
-func BuildLCS(C [][]byte, X string, Y string) string {
+func BuildLCS(C [][]byte, X []string, Y []string) []string {
 	m := len(X)
 	n := len(Y)
 
 	lcsLastIndex := C[m][n]
 	// uint8 or rune?
-	var lcs = make([]uint8, lcsLastIndex)
+	var lcs = make([]string, lcsLastIndex)
 
 	for m > 0 && n > 0 {
-		if X[m - 1] == Y[n - 1]	{
-			lcs[lcsLastIndex - 1] = X[m - 1]
-			lcsLastIndex--; m--; n--
-		} else if C[m -1][n] >= C[m][n - 1]{
+		if X[m-1] == Y[n-1] {
+			lcs[lcsLastIndex-1] = X[m-1]
+			lcsLastIndex--
+			m--
+			n--
+		} else if C[m-1][n] >= C[m][n-1] {
 			m--
 		} else {
 			n--
 		}
 	}
 
-	return string(lcs)
+	return lcs
+}
+
+func BuildDiff(C [][]byte, X []string, Y []string) []string {
+	m := len(X)
+	n := len(Y)
+
+	lenIndex := m + n - int(C[m][n])
+	// uint8 or rune?
+	var lcs = make([]string, lenIndex)
+
+	for index := lenIndex; index > 0; index-- {
+		if m > 0 && n > 0 && X[m-1] == Y[n-1] {
+			lcs[index-1] = string(X[m-1])
+			m--
+			n--
+		} else if m > 0 && (n == 0 || C[m-1][n] >= C[m][n-1]) {
+			lcs[index-1] = "-" + X[m-1]
+			m--
+		} else if n > 0 && (m == 0 || C[m-1][n] < C[m][n-1]) {
+			lcs[index-1] = "+" + Y[n-1]
+			n--
+		} else {
+			lcs[index-1] = ""
+		}
+	}
+
+	return lcs
 }
