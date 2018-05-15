@@ -1,37 +1,48 @@
 package main
 
 import (
-	"github.com/Kat6123/diff/lcs"
+	"flag"
+	"github.com/Kat6123/diff"
+	"log"
+)
+
+var (
+	unifiedPtr = flag.Bool("u", false, "output Diff in unified format")
+	commonPtr  = flag.Bool("c", false, "output common part of two files")
 )
 
 func main() {
-	file1, err := lcs.ReadFile("file1")
+	flag.Parse()
+
+	if flag.NArg() != 2 {
+		log.Fatal("two file paths are required")
+		return
+	}
+
+	path1 := flag.Arg(0)
+	path2 := flag.Arg(1)
+
+	// TODO: transform to full path
+	file1, err := diff.ReadFile(path1)
 	if err != nil {
 		return
 	}
-	file2, err := lcs.ReadFile("file2")
+	file2, err := diff.ReadFile(path2)
 	if err != nil {
 		return
 	}
 
-	//X := "MXMJYAUZ"
-	//Y := "MMZJAWXU"
-
-	C := lcs.Table(file1, file2)
-	//lenC := len(C)
-	//for i := 0; i < lenC; i++ {
-	//	fmt.Println(C[i])
-	//}
-	//fmt.Println(lcs.Construct(C, file1, file2))
-	//
-	//for _, s := range lcs.PrintDiff(C, file1, file2) {
-	//	fmt.Println(s)
-	//}
-	//
-	//fmt.Println(file1)
-	//fmt.Println(file2)
-	chain := lcs.DiffChain(C, file1, file2)
-	for _, ch := range chain {
-		lcs.Print(ch.PrintDiff(file1, file2))
+	var result []string
+	// Where I should define var diff here or at the top?
+	// What about mutually exclusive flags
+	switch {
+	case *commonPtr:
+		result = diff.Common(file1, file2)
+	case *unifiedPtr:
+		result = diff.Unified(file1, file2)
+	default:
+		result = diff.Normal(file1, file2)
 	}
+
+	diff.Print(result)
 }
