@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/Kat6123/diff/lcs"
 )
 
@@ -18,11 +17,21 @@ func main() {
 	//X := "MXMJYAUZ"
 	//Y := "MMZJAWXU"
 
-	C := lcs.LCS(file1, file2)
-	lenC := len(C)
-	for i := 0; i < lenC; i++ {
-		fmt.Println(C[i])
+	C := lcs.Table(file1, file2)
+	//lenC := len(C)
+	//for i := 0; i < lenC; i++ {
+	//	fmt.Println(C[i])
+	//}
+	//fmt.Println(lcs.Construct(C, file1, file2))
+	//
+	//for _, s := range lcs.PrintDiff(C, file1, file2) {
+	//	fmt.Println(s)
+	//}
+	//
+	//fmt.Println(file1)
+	//fmt.Println(file2)
+	chain := lcs.DiffChain(C, file1, file2)
+	for _, ch := range chain {
+		lcs.Print(ch.PrintDiff(file1, file2))
 	}
-	fmt.Println(lcs.BuildLCS(C, file1, file2))
-	fmt.Println(lcs.BuildDiff(C, file1, file2))
 }
