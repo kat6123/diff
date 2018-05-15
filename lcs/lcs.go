@@ -1,6 +1,14 @@
+/*
+Package lcs implements methods to create diff table and use it to build string slice difference.
+*/
 package lcs
 
-func LCS(X []string, Y []string) [][]byte {
+import (
+	"fmt"
+)
+
+// Table build graph
+func Table(X []string, Y []string) [][]byte {
 	m := len(X)
 	n := len(Y)
 
@@ -34,7 +42,8 @@ func max(a byte, b byte) byte {
 	return b
 }
 
-func BuildLCS(C [][]byte, X []string, Y []string) []string {
+// Construct return the largest common subsequence
+func Construct(C [][]byte, X []string, Y []string) []string {
 	m := len(X)
 	n := len(Y)
 
@@ -58,7 +67,7 @@ func BuildLCS(C [][]byte, X []string, Y []string) []string {
 	return lcs
 }
 
-func BuildDiff(C [][]byte, X []string, Y []string) []string {
+func PrintDiff(C [][]byte, X []string, Y []string) []string {
 	m := len(X)
 	n := len(Y)
 
@@ -68,7 +77,7 @@ func BuildDiff(C [][]byte, X []string, Y []string) []string {
 
 	for index := lenIndex; index > 0; index-- {
 		if m > 0 && n > 0 && X[m-1] == Y[n-1] {
-			lcs[index-1] = string(X[m-1])
+			lcs[index-1] = " " + X[m-1]
 			m--
 			n--
 		} else if m > 0 && (n == 0 || C[m-1][n] >= C[m][n-1]) {
@@ -83,4 +92,101 @@ func BuildDiff(C [][]byte, X []string, Y []string) []string {
 	}
 
 	return lcs
+}
+
+type Diff struct {
+	// range
+	first  [2]int
+	second [2]int
+}
+
+//small or not?
+func (d *Diff) initStartRange(f int, s int) {
+	d.first[0] = f
+	d.second[0] = s
+}
+
+func (d *Diff) initEndRange(f int, s int) {
+	d.first[1] = f
+	d.second[1] = s
+}
+
+func (d *Diff) PrintDiff(X []string, Y []string) []string {
+	var diff []string
+	var head string
+	firstRange := false
+	secondRange := false
+	var mode string
+
+	if d.first[1]-1-(d.first[0]+1) > 1 {
+		firstRange = true
+	}
+	if d.second[1]-1-(d.second[0]+1) > 1 {
+		secondRange = true
+	}
+
+	for i := d.first[0] + 1; i < d.first[1]; i++ {
+		mode = "d"
+		diff = append(diff, "< "+X[i-1])
+	}
+
+	if firstRange {
+		diff = append(diff, "---")
+	}
+
+	for j := d.second[0] + 1; j < d.second[1]; j++ {
+		if mode == "d" {
+			mode = "c"
+		} else {
+			mode = "a"
+		}
+		diff = append(diff, "> "+Y[j-1])
+	}
+
+	if !firstRange {
+		head = fmt.Sprintf("%d", d.first[0]+1)
+	} else {
+		head = fmt.Sprintf("%d,%d", d.first[0]+1, d.first[1]-1)
+	}
+	head = head + mode
+	if !secondRange {
+		head = fmt.Sprintf("%s%d", head, d.second[0]+1)
+	} else {
+		head = fmt.Sprintf("%s%d,%d", head, d.second[0]+1, d.second[1]-1)
+	}
+
+	return append([]string{head}, diff...)
+}
+
+func DiffChain(C [][]byte, X []string, Y []string) []Diff {
+	m := len(X)
+	n := len(Y)
+
+	length := C[m][n] + 1
+	// uint8 or rune?
+	var chain = make([]Diff, length)
+
+	// TODO: add comment
+	// or add new struct for [2]int, start end?
+	// when assign struct is it by value
+	current := &chain[length-1]
+	current.initEndRange(m+1, n+1)
+
+	// TODO: m + n - int() is a step number add comment
+	for index := m + n - int(C[m][n]); index > 0; index-- {
+		if m > 0 && n > 0 && X[m-1] == Y[n-1] {
+			current.initStartRange(m, n)
+			length--
+			current = &chain[length-1]
+			current.initEndRange(m, n)
+			m--
+			n--
+		} else if m > 0 && (n == 0 || C[m-1][n] >= C[m][n-1]) {
+			m--
+		} else if n > 0 && (m == 0 || C[m-1][n] < C[m][n-1]) {
+			n--
+		}
+	}
+
+	return chain
 }
